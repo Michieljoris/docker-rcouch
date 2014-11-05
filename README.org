@@ -1,0 +1,90 @@
+#+TITLE: docker-rcouch
+
+* Run from Docker Hub
+: docker run -d -p 5984:5984 --name rcouch michieljoris/docker-rcouch
+
+* Build and run from git repo
+
+Clone the repo
+
+=git clone http://github.com/michieljoris/docker-rcouch=
+
+Rename Dockerfile.local to Dockerfile
+
+: mv Dockerfile.local Dockerfile
+
+=bin/build= to build the michieljoris/rcouch image.
+
+=bin/run= to run the rcouch container.
+
+=docker stop rcouch= to pause the container
+
+=docker start rcouch= to start the container up again.
+
+=bin/reset= to reset the container to its beginning state (rcouch db is empty
+again).
+
+* Access rcouch
+  
+Access =rcouch= on http://localhost:5984
+
+
+I've tested the validate_doc_read feature. Write-only doesn't seem to work, nor
+filtering fields in changes feed. Or I'm doing something wrong.
+
+Copied from the [[https://github.com/Michieljoris/Dockerfiles/tree/master/rcouch][wiki]]:
+
+* Changes from Apache CouchDB 
+
+
+- Refactoring of the codebase with a new release system based on Erlang reltools
+  and rebar, a separations of the applications allowing more custumisations and
+  an improved statibiliy of CouchDB (better supervision). With this refactoring
+  A release can be fully relocatable and is statically linked.
+
+- View changes - Rcouch offers you the possibility to get incremental view
+  changes (ie using the changes API over a view index. View changes can be
+  filtered using a javascript function or using the view parameters (you can get
+  view changes for a key or a range).
+
+- View-based replication - You can incrementally replicate your documents using
+  a view to filter them. This replication is based on the view changes
+
+- Include deleted documents in view results
+
+- Validate documents on read - Validate if the document can be read by the
+  current user.
+
+- Write-only databases - Only admins and some readers are able to read a
+  database.
+
+- Filter returned fields in changes results
+
+- Improved logging - new logging system using Lager with more granularity in
+  logs
+
+- More stats - more statistics in rcouch
+
+- Some Optimisations and internal changes in the source code. This changes has
+  been added upon the time to fix issues or optimize some processing based on
+  the user and customers feedback.
+
+- Custom extensions - It is easy to add custom extensions to your build using
+  the rcouch system. Extensions built-in for rcouch are _random_docs and
+  _db_updates. Some others extensions are available in the refuge projects.
+
+  
+
+
+
+* Todo
+- run as rcouch user  
+- ssl version? 
+- add fauxton and docs  
+
+  
+
+  
+  
+  
+ 

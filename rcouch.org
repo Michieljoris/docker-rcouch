@@ -1,0 +1,179 @@
+* http://markmail.org/message/vn5jvscfs2jnuhgb
+ git clone http://git-wip-us.apache.org/repos/asf/couchdb.git
+  git checkout 1994-merge-rcouch
+  
+https://git-wip-us.apache.org/repos/asf?p=couchdb.git;a=tree;h=refs/heads/1994-merge-rcouch;hb=refs/heads/1994-merge-rcouch
+Hi all,
+
+If you didn't see it (sorry for the spam), I have started to merge rcouch
+with couchdb 1.6. As of today the version available in the
+`1994-merge-rcouch` is fully usable and pass all the tests:
+
+https://git-wip-us.apache.org/repos/asf?p=couchdb.git;a=tree;h=refs/heads/1994-merge-rcouch;hb=refs/heads/1994-merge-rcouch
+
+It merges the following features:
+
+- full build of Apache CouchDB as an Erlang release [1]. In the process the
+source code layout has been refactored:
+
+ - Erlang apps are in src/apps
+ - share folder has been moved to src/share
+ - fauxton sources has been moved to src/share/fauxton
+ - couchjs-node has been moved to src/addons/couchjs-node (this is not an
+erlang app)
+ - build support scripts and code have been moved to src/support
+ - all externals dependencies (mochiweb, jiffy, erlang-oauth, ibrowse,
+snappy) has been removed from our source and are fetched during the build
+for now using rebar. It should be noted that some Java projects in Apache
+CouchDB are also using mvn for such purpose. For now all dependencies are
+fetched from github.com/refuge . But we can choose to dl them from upstream
+or a couchdb specific repository.
+
+- Bind statically Spidermonkey (and optionally ICU) or reuse the libraries
+installed on the system. By binding it statically with Spidermonkey you
+will alsoo be able to launch Apache CouchDB easily on any arm platform
+since a patch is added to the Spidermonkey sources.
+
+The source code of Spidermonkey and ICU are downloaded from
+http://dl.refuge.io for now (which is on the rackspace CDN) but this can be
+changed later. The other way to do it would be integrating a gzipped
+archive in the source code like Basho Riak does, but I am not sure it's a
+good idea: it increases the time of a checkout and can be a problem with
+the license (spidermonkey is under MPL 1.1) .
+
+- reworks some part of the supervision. This part is not finished yet but
+gives already some improvements against the current one.
+- replaces ejson by jiffy to encode/decode JSON
+- replaces the ICU driver `couch_drv` by a full NIF `couch_collate` to
+handle the collation.
+- allows automatic build of debian, rpm, solaris and freebsd packages
+- can be embedded in another Erlang application.
+
+Compared to rcouch I added the possibility to launch the tests.
+
+TODO:
+----------
+
+- extract couch_http_* in a standalone APP.
+- add view changes
+- extract couch_stats_*
+- add lager support
+- add others features from rcouch
+- creation of source archives
+- make distcheck
+- windows support
+- some improvements to the launch script
+- amend the NOTICE file
+
+How to test ?
+-------------------
+
+1) Compile Apache CouchDB
+
+To build Apache CouchDB, you now just have to run the command line `make`.
+This is - by default - binding Apache CouchDB with Spidermonkey statically.
+It requires to have installed ICU (on macosx it use the installed version),
+GCC and curl. If you want to build it against installed libraries run the
+command line `make libs=shared` . To force the build with a static ICU
+(tested on linux, freebsd, osx and openbsd) add the option `icu=static` to
+the command line.
+
+I have tested the build only on macosx 10.9  and ubuntu for now.
+
+On macosx it will requires to install Spidermonkey (`brew install
+spidermonkey` and is looking for it in /usr/local. On ubuntu and other
+linuxes it requires to install icu,
+
+On Ubuntu, install the dependencies as usual and launch the make.  It
+should work the same on other linux and bsd systems.
+
+You can also pass the following variables to the makefile:
+
+JS_CFLAGS
+JS_LIBS
+ICU_CFLAGS
+ICU_LDFLAGS
+
+2) Launch the tests
+
+`make check` will launch all test tests (erlang and js). If you want to
+only run Erlang tests run `make test`. And for JS tests run `make jstest.
+
+To run Erlang verbose tests run `make verbose-test`.
+
+If you want to run a specific Erlang test run the following command line:
+
+    prove -v /path/to/file.t
+
+For JS tests :
+
+   escript ./src/test/javascript/test_js.escript /path/to/file.js
+
+3) Create an Erlang release
+
+An Erlang release is fully relocatable and embed Erlang so it don't need to
+be installed on the target machine If you bind it statically against ICU
+and spidermonkey you want even need to install them on the target machine.
+
+To create the release run: `make rel`. You will find the release in the
+rel/apache-couchdb folder.
+
+At this point you can run couchdb by launching the command line:
+
+     ./rel/apache-couchdb/bin/couchdb console
+
+It will run in an interactive e=Erlang console.
+
+To run it in background run  ./rel/apache-couchdb/bin/couchdb  start. to
+stop it run the same commande with `stop`.
+
+Note: a mode to run it in the frontend inside a supervisor will be added
+soon.
+
+4) Build the doc:
+
+`make doc` is creating all the doc (html, pdf and inf). `make html` is only
+building the html doc. To install it in the release run `make reldoc`
+
+To conclude
+-----------------
+
+And voila, please test and let me know if you find any issue. The full
+merge should be done over the week-end. I will keep the ml updated.
+
+Enjoy!
+
+- benoit
+
+[1] http://learnyousomeerlang.com/release-is-the-word
+
+* links
+
+http://jasonwilder.com/blog/2014/08/19/squashing-docker-images/
+http://www.centurylinklabs.com/optimizing-docker-images/?hvid=4wO7Yt
+http://stackoverflow.com/questions/19897743/exposing-a-port-on-a-live-docker-container
+http://supervisord.org/configuration.html#program-x-section-settings
+
+* cleanup image, minimize image
+* run as rcouch user  
+* verify source?  
+* build standalone rcouch and make minimal image 
+* ssl version? 
+* add fauxton and docs  
+* erlang.deb files  
+  http://packages.erlang-solutions.com/erlang/esl-erlang/FLAVOUR_1_general/esl-erlang_16.b~ubuntu~lucid_amd64.deb
+  http://packages.erlang-solutions.com/erlang/esl-erlang/FLAVOUR_1_general/esl-erlang_15.b~ubuntu~oneiric_amd64.deb
+  
+* merge  
+  
+Still testing. Using the repo at github.com/rcouch, but at
+http://markmail.org/message/vn5jvscfs2jnuhgb a merge with couchdb is
+mentioned. That commit works better.
+
+git clone http://git-wip-us.apache.org/repos/asf/couchdb.git
+ 
+git checkout 1994-merge-rcouch
+  
+https://git-wip-us.apache.org/repos/asf?p=couchdb.git;a=tree;h=refs/heads/1994-merge-rcouch;hb=refs/heads/1994-merge-rcouch
+
+This will build an image that runs [[https://github.com/rcouch/rcouch][rcouch]], a variant of CouchDB,

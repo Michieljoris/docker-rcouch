@@ -1,0 +1,1 @@
+docker run -d -p 5984:5984 --name rcouch -v /home/michieljoris/shared-docker:/host michieljoris/rcouch
